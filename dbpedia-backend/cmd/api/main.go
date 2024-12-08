@@ -1,6 +1,8 @@
 package main
 
 import (
+	"dbpedia-backend/cmd/api/handlers"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,6 +18,19 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Backend is running"))
 	}).Methods("GET")
+
+	//Root route for basic health check or welcome message
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Welcome to the DBpedia Backend API")
+	}).Methods("GET")
+
+	// Register the SPARQL handler
+	router.HandleFunc("/sparql", handlers.SPARQLHandler).Methods("POST", "GET")
+
+	// Register the predefined queries handler
+	router.HandleFunc("/predefined", handlers.PredefinedQueryHandler).Methods("GET")
 
 	// Start the server
 	log.Println("Server is running on port 8080")
