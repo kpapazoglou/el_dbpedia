@@ -12,6 +12,7 @@ const QueryHistory = ({ onSelectQuery }) => {
     onSelectQuery(query);
   };
 
+  
   return (
     <div className="p-4 bg-white rounded-lg shadow">
       <h2 className="text-lg font-semibold">Query History</h2>
