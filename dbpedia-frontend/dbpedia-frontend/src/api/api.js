@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL||"http://localhost:8080";
 
 const handleRequest = async (method, url, data = null) => {
   try {
@@ -12,6 +12,6 @@ const handleRequest = async (method, url, data = null) => {
   }
 };
 
-export const executeSPARQLQuery = (query) => handleRequest("POST", "/sparql", { query });
+export const executeSPARQLQuery = (query) => handleRequest("POST", "/api/query", { query });
 
-export const fetchPredefinedQueries = () => handleRequest("GET", "/predefined?query=all_classes");
+export const fetchPredefinedQueries = () => handleRequest("GET", "/api/predefined?query=all_classes");

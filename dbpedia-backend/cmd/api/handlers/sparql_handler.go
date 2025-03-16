@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -28,9 +29,22 @@ func SPARQLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// // Execute the SPARQL query
+	// endpoint := "http://localhost:8080/sparql"
+	// //endpoint := "http://localhost:8890/sparql"
+	// result, err := services.ExecuteSPARQL(endpoint, requestBody.Query)
+	// if err != nil {
+	// 	utils.HandleError(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	// Get SPARQL endpoint from environment variable
+
+	endpoint := os.Getenv("VIRTUOSO_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "http://store:8890/sparql" // Default to Docker network service
+	}
+
 	// Execute the SPARQL query
-	endpoint := "http://localhost:8080/sparql"
-	//endpoint := "http://localhost:8890/sparql"
 	result, err := services.ExecuteSPARQL(endpoint, requestBody.Query)
 	if err != nil {
 		utils.HandleError(w, err.Error(), http.StatusInternalServerError)
