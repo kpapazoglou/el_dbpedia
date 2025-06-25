@@ -28,7 +28,7 @@ Ensure you have the following installed on your system:
 ### Steps
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/yourusername/greek-dbpedia-kg.git
+   git clone https://github.com/kpapazoglou/greek-dbpedia-kg.git
    cd greek-dbpedia-kg
    ```
 2. **Start the application using Docker Compose:**
