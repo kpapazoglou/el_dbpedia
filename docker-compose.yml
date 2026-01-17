@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  store:
+    image: openlink/virtuoso-opensource-7:latest
+    container_name: dbpedia-virtuoso
+    environment:
+      DBA_PASSWORD: "mysecretpassword"
+      SPARQL_UPDATE: "true"
+      DEFAULT_GRAPH: "http://dbpedia.org"
+      VIRT_Parameters_NumberOfBuffers: 170000
+      VIRT_Parameters_MaxDirtyBuffers: 130000
+      VIRT_Parameters_DirsAllowed: "., /database/to_load"
+    ports:
+      - "8890:8890"
+      - "1111:1111"
+    volumes:
+      - ./dbpedia_data:/database/to_load
+      - ./virtuoso_db:/database
+
+  api:
+    build: ./dbpedia-backend
+    container_name: dbpedia-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - VIRTUOSO_ENDPOINT=http://store:8890/sparql
+    depends_on:
+      - store
