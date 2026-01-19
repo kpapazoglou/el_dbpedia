@@ -1,39 +1,37 @@
-# Use Golang image for building (updated version)
+# Stage 1: Build
 FROM golang:1.22.4 AS builder
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Copy Go module files first to optimize caching
+# Αντιγράφουμε τα go.mod και go.sum πρώτα (για caching)
 COPY go.mod go.sum ./
-
-# Download dependencies before copying source code
 RUN go mod download
 
-# Copy backend source code
+# Αντιγράφουμε όλο τον κώδικα
 COPY . .
 
-# Set working directory to where main.go is located
-WORKDIR /app/cmd/api
+# Πηγαίνουμε στον φάκελο που είναι το main.go
+# (Αν το main.go σου είναι χύμα στον root φάκελο, σβήσε την επόμενη γραμμή)
+WORKDIR /app/cmd/api 
 
-# Build the backend binary
-RUN go build -o backend .
+# --- Η ΔΙΟΡΘΩΣΗ ΕΙΝΑΙ ΕΔΩ ---
+# Χτίζουμε το binary ΣΤΑΤΙΚΑ για να τρέχει στο Alpine
+RUN CGO_ENABLED=0 GOOS=linux go build -o backend .
 
-# Use a minimal base image for final execution
+# Stage 2: Runtime
 FROM alpine:latest
 
-# Set working directory in final container
+# Προσθέτουμε πιστοποιητικά ασφαλείας (χρειάζονται για να κάνεις calls σε https)
+RUN apk --no-cache add ca-certificates
+
 WORKDIR /root/
 
-# Copy the compiled binary from the builder stage
+# Αντιγράφουμε το binary από το builder stage
+# Προσοχή: Το path '/app/cmd/api/backend' πρέπει να ταιριάζει με το WORKDIR του builder
 COPY --from=builder /app/cmd/api/backend .
 
-# Expose backend API port
+# Ανοίγουμε την πόρτα
 EXPOSE 8080
 
-# Set environment variables
-ENV VIRTUOSO_ENDPOINT=http://store:8890/sparql
-ENV PORT=8080
-
-# Run the backend service
+# Τρέχουμε το backend
 CMD ["./backend"]

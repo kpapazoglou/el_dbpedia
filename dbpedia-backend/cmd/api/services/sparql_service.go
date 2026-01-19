@@ -24,6 +24,10 @@ func ExecuteSPARQL(endpoint string, query string) (string, error) {
 	// Set necessary headers
 	req.Header.Set("Content-Type", "application/sparql-query")
 
+	// --- Η ΔΙΟΡΘΩΣΗ ΕΙΝΑΙ ΕΔΩ ---
+	// Λέμε στο Virtuoso: "Στείλε μου την απάντηση σε JSON, όχι XML"
+	req.Header.Set("Accept", "application/sparql-results+json")
+
 	// Log the SPARQL query
 	log.Printf("Executing SPARQL query: %s", query)
 
@@ -38,7 +42,8 @@ func ExecuteSPARQL(endpoint string, query string) (string, error) {
 
 	// Check for non-200 status codes
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("SPARQL endpoint returned status %d: %s", resp.StatusCode, resp.Status)
+		bodyBytes, _ := io.ReadAll(resp.Body) // Διαβάζουμε το body για να δούμε το λάθος
+		log.Printf("SPARQL endpoint returned status %d: %s. Body: %s", resp.StatusCode, resp.Status, string(bodyBytes))
 		return "", errors.New("SPARQL endpoint returned an error: " + resp.Status)
 	}
 

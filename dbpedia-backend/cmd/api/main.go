@@ -27,10 +27,10 @@ func main() {
 	}).Methods("GET")
 
 	// Register the SPARQL handler
-	router.HandleFunc("/sparql", handlers.SPARQLHandler).Methods("POST", "GET")
+	router.HandleFunc("/sparql", handlers.SPARQLHandler).Methods("POST", "GET", "OPTIONS")
 
 	// Register the predefined queries handler
-	router.HandleFunc("/predefined", handlers.PredefinedQueryHandler).Methods("GET")
+	router.HandleFunc("/predefined", handlers.PredefinedQueryHandler).Methods("POST", "GET", "OPTIONS")
 
 	// Start the server
 	log.Println("Server is running on port 8080")

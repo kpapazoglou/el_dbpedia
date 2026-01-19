@@ -1,32 +1,20 @@
-# Use Node.js for building the frontend
-FROM node:18 AS builder
+# Χρησιμοποιούμε Node.js image (ελαφρύ)
+FROM node:20-alpine
 
-# Set working directory inside the container
+# Ορίζουμε τον φάκελο εργασίας μέσα στο container
 WORKDIR /app
 
-# Copy package.json and lock files
-COPY package.json package-lock.json ./
+# Αντιγράφουμε τα αρχεία ρυθμίσεων
+COPY package*.json ./
 
-# Install dependencies
+# Εγκαθιστούμε τα dependencies
 RUN npm install
 
-# Copy the rest of the frontend source
+# Αντιγράφουμε όλο τον υπόλοιπο κώδικα
 COPY . .
 
-# Build the React application
-RUN npm run build
+# Ανοίγουμε την πόρτα του Vite (συνήθως 5173)
+EXPOSE 5173
 
-# Use a lightweight web server to serve the built frontend
-FROM nginx:alpine
-
-# Set working directory in final image
-WORKDIR /usr/share/nginx/html
-
-# Copy the built frontend from the builder stage
-COPY --from=builder /app/dist .
-
-# Expose frontend port
-EXPOSE 3000
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Ξεκινάμε την εφαρμογή με --host για να είναι προσβάσιμη έξω από το docker
+CMD ["npm", "run", "dev", "--", "--host"]

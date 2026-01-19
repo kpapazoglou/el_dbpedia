@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # --- 1. Database (Virtuoso)
   store:
     image: openlink/virtuoso-opensource-7:latest
     container_name: dbpedia-virtuoso
@@ -18,6 +19,7 @@ services:
       - ./dbpedia_data:/database/to_load
       - ./virtuoso_db:/database
 
+  # --- 2. Backend (Go API) 
   api:
     build: ./dbpedia-backend
     container_name: dbpedia-backend
@@ -27,3 +29,21 @@ services:
       - VIRTUOSO_ENDPOINT=http://store:8890/sparql
     depends_on:
       - store
+
+  # --- 3. Frontend (React) 
+  frontend:
+    build:
+      context: ./dbpedia-frontend/dbpedia-frontend
+    container_name: dbpedia-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      # για (Hot Reload)
+      - ./dbpedia-frontend/dbpedia-frontend:/app
+      # Προστατεύουμε τα node_modules του container
+      - /app/node_modules
+    environment:
+      #  για να δουλεύει το Hot Reload στα Windows
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - api
