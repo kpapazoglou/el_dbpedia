@@ -61,9 +61,9 @@ It implements a robust **3-tier architecture** (Frontend, Middleware, Database) 
    docker-compose up --build
 
 3. **Access the App:** 
-   Frontend: http://localhost:5173 (or port defined in docker-compose)
-   Backend API: http://localhost:8080
-   Virtuoso: http://localhost:8890
+  - Frontend: http://localhost:5173 (or port defined in docker-compose)
+  - Backend API: http://localhost:8080
+  - Virtuoso: http://localhost:8890
 
 
 This project is part of a Thesis submission.
