@@ -32,6 +32,9 @@ func main() {
 	// Register the predefined queries handler
 	router.HandleFunc("/predefined", handlers.PredefinedQueryHandler).Methods("POST", "GET", "OPTIONS")
 
+	// Register the dashboard statts handler
+	http.HandleFunc("/stats", handlers.GetDashboardStats)
+
 	// Start the server
 	log.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
