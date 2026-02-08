@@ -11,10 +11,9 @@ RUN go mod download
 COPY . .
 
 # Πηγαίνουμε στον φάκελο που είναι το main.go
-# (Αν το main.go σου είναι χύμα στον root φάκελο, σβήσε την επόμενη γραμμή)
 WORKDIR /app/cmd/api 
 
-# --- Η ΔΙΟΡΘΩΣΗ ΕΙΝΑΙ ΕΔΩ ---
+
 # Χτίζουμε το binary ΣΤΑΤΙΚΑ για να τρέχει στο Alpine
 RUN CGO_ENABLED=0 GOOS=linux go build -o backend .
 
@@ -27,7 +26,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Αντιγράφουμε το binary από το builder stage
-# Προσοχή: Το path '/app/cmd/api/backend' πρέπει να ταιριάζει με το WORKDIR του builder
 COPY --from=builder /app/cmd/api/backend .
 
 # Ανοίγουμε την πόρτα

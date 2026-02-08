@@ -24,8 +24,7 @@ func ExecuteSPARQL(endpoint string, query string) (string, error) {
 	// Set necessary headers
 	req.Header.Set("Content-Type", "application/sparql-query")
 
-	// --- Η ΔΙΟΡΘΩΣΗ ΕΙΝΑΙ ΕΔΩ ---
-	// Λέμε στο Virtuoso: "Στείλε μου την απάντηση σε JSON, όχι XML"
+	//"Στείλε μου την απάντηση σε JSON
 	req.Header.Set("Accept", "application/sparql-results+json")
 
 	// Log the SPARQL query

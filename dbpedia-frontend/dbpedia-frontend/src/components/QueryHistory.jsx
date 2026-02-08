@@ -16,7 +16,7 @@ const QueryHistory = ({ onSelectQuery }) => {
 
     // Ακούμε για αλλαγές (αν το ιστορικό ενημερωθεί από άλλο tab ή component)
     window.addEventListener("storage", loadHistory);
-    // Μικρό hack: Επειδή το localStorage δεν ενημερώνει το ίδιο το tab, 
+    // Επειδή το localStorage δεν ενημερώνει το ίδιο το tab, 
     // το App.jsx θα κάνει re-render τον component όταν αλλάζει το state του history.
     
     // Εναλλακτικά, απλά διαβάζουμε το prop αν το περνάγαμε, 

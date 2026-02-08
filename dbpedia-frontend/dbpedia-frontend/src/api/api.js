@@ -13,8 +13,7 @@ const handleRequest = async (method, url, data = null) => {
   } catch (error) {
     console.error("API Error:", error);
 
-    // ΕΔΩ ΕΙΝΑΙ Η ΑΛΛΑΓΗ:
-    // Φτιάχνουμε το μήνυμα κειμένου
+    
     let errorMessage = "Unknown error occurred.";
 
     if (error.response && error.response.data) {
@@ -31,7 +30,6 @@ const handleRequest = async (method, url, data = null) => {
       errorMessage = error.message;
     }
 
-    // ΠΡΟΣΟΧΗ: Πετάμε 'Error' Object, ώστε το App.jsx να μπορεί να διαβάσει το .message
     throw new Error(errorMessage);
   }
 };

@@ -9,17 +9,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Η main  στοχος μας να σηκωσει εναν HTTP server που θα εξυπηρετεί τα αιτήματα προς το backend.
+// Θα χρησιμοποιήσουμε το Gorilla Mux για να διαχειριστούμε τα routes και να κατευθύνουμε τα αιτήματα στους κατάλληλους handlers.
 func main() {
-	// Create a new router
+	//δρομολογητης για να διαχειριστεί τα αιτήματα
 	router := mux.NewRouter()
 
-	// Define a simple health check endpoint
+	//health check endpoint -->test
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Backend is running"))
 	}).Methods("GET")
 
-	//Root route for basic health check or welcome message
+	//Root route for basic health check or welcome message -> test
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
@@ -32,7 +34,7 @@ func main() {
 	// Register the predefined queries handler
 	router.HandleFunc("/predefined", handlers.PredefinedQueryHandler).Methods("POST", "GET", "OPTIONS")
 
-	// Register the dashboard statts handler
+	// Register the dashboard stats handler
 	http.HandleFunc("/stats", handlers.GetDashboardStats)
 
 	// Start the server
