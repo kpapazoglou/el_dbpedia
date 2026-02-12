@@ -65,5 +65,3 @@ It implements a robust **3-tier architecture** (Frontend, Middleware, Database) 
    Backend API: http://localhost:8080
    Virtuoso: http://localhost:8890
 
-
-This project is part of a Thesis submission.
