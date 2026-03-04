@@ -80,7 +80,8 @@ Write-Host "Success! All files are in '$OutputDir'" -ForegroundColor Cyan
 # 5 run with .\download_data.ps1 on powershell terminal, kai tha ksekinisei na kanei download ta arxeia sto fakelo 'dbpedia_data' pou tha dimiourgithei an den yparxei
 
 # 6 meta to docker compose up -d --build , kai exoyn sikwthei ola
-# gia na mpoyme sto virtusos sto terminal  ,h entoli 'docker exec -it dbpedia-virtuoso isql 1111 dba mysecretpassword'
+# entoli 'docker exec -it dbpedia-virtuoso ls -l /database/to_load '  για να δουμε "βλέπει" το Virtuoso μέσα στον φάκελο:
+# gia na mpoyme sto virtuosο sql terminal  ,h entoli 'docker exec -it dbpedia-virtuoso isql 1111 dba mysecretpassword'
 # sti sunexeia 'SQL>  "ld_dir('/database/to_load', '*.bz2', 'http://dbpedia.org');" ta .bz2 αρχεία για να τα βάλεις στο graph http://dbpedia.org". ths vasis mas
 #rdf_loader_run(); gia na ksekinisei to sql
 #'checkpoint;'gia na grapsei 
