@@ -4,15 +4,17 @@ import QueryEditor from "./components/QueryEditor";
 import PredefinedQueries from "./components/PredefinedQueries";
 import ResultsTable from "./components/ResultsTable";
 import QueryHistory from "./components/QueryHistory";
+import StatsDashboard from './components/StatsDashboard';
 import { executeSPARQLQuery } from "./api/api"; 
 
 function App() {
   const [results, setResults] = useState(null);
   const [queryHistory, setQueryHistory] = useState([]);
   const [currentQuery, setCurrentQuery] = useState(""); 
-  
-  // ΝΕΟ STATE: Κρατάει το μήνυμα λάθους του "Compiler"
   const [error, setError] = useState(null);
+  
+  
+  const [queryStats, setQueryStats] = useState(null);
 
   const addToHistory = (query) => {
     setQueryHistory((prev) => {
@@ -26,14 +28,34 @@ function App() {
   const handleExecuteQuery = async (query) => {
     try {
       setResults(null); 
-      setError(null); // Καθαρίζουμε τα παλιά λάθη πριν την εκτέλεση
+      setError(null); 
+      setQueryStats(null); // Καθαρίζουμε τα παλιά στατιστικά
       
       const data = await executeSPARQLQuery(query);
+      
+      
+      if (!data || typeof data !== 'object' || !data.head || !data.results) {
+          throw new Error("Ο server επέστρεψε μη έγκυρα δεδομένα. Πιθανό συντακτικό λάθος στο SPARQL.");
+      }
+      
+      const rowCount = data.results?.bindings?.length || 0;
+      
+      // Διαβάζουμε τα στατιστικά της ταυτοχρονίας (Goroutines) από τη Go
+      const backendStats = data.concurrency_stats || {};
+
       setResults(data);
+      
+      // Αποθηκεύουμε τα στατιστικά στο React State
+      setQueryStats({
+          rows: rowCount,
+          time: backendStats.time_ms || 0,
+          total_db: backendStats.total_db_rows,
+          isParallel: backendStats.parallel_execution
+      });
+
       addToHistory(query);
       
     } catch (err) {
-      // Αν σκάσει λάθος, το βάζουμε στο state για να το δείξει ο Editor
       console.error("Query Error:", err);
       setError(err.message); 
     }
@@ -41,7 +63,8 @@ function App() {
 
   const handleSelectQuery = (query) => {
     setResults(null);
-    setError(null); // Καθαρίζουμε τυχόν λάθη όταν επιλέγεις νέο query
+    setError(null);
+    setQueryStats(null);
     setCurrentQuery(query);
   };
 
@@ -51,10 +74,11 @@ function App() {
       
       <main className="flex-grow max-w-7xl mx-auto w-full p-6 space-y-8">
         
+        <StatsDashboard />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           <div className="lg:col-span-2 space-y-6">
-            {/* Περνάμε το 'error' στον Editor */}
             <QueryEditor 
                onExecute={handleExecuteQuery} 
                initialValue={currentQuery}
@@ -63,9 +87,43 @@ function App() {
             
             {results && (
               <div className="mt-8">
-                 <h3 className="text-lg font-bold text-[#003366] mb-2 border-b border-gray-300 pb-1">
-                   Query Results
-                 </h3>
+                 <div className="flex justify-between items-end mb-2 border-b border-gray-300 pb-1">
+                     <h3 className="text-lg font-bold text-[#003366]">
+                       Query Results
+                     </h3>
+                     
+                     {/* ΕΜΦΑΝΙΣΗ ΣΤΑΤΙΣΤΙΚΩΝ   */}
+                     {queryStats && (
+                         <div className="flex space-x-3 text-[11px] font-mono text-gray-700 bg-[#f8fafc] px-3 py-1.5 rounded border border-gray-300 shadow-sm items-center">
+                             
+                             {queryStats.isParallel && (
+                                 <span className="flex items-center text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-[9px]">
+                                     <span className="mr-1 animate-pulse">⚡</span> Parallel
+                                 </span>
+                             )}
+
+                             <span className="flex items-center">
+                                 Time: <strong className="text-indigo-700 ml-1">{queryStats.time} ms</strong>
+                             </span>
+                             
+                             <span className="text-gray-300">|</span>
+                             
+                             <span className="flex items-center">
+                                 Returned Rows: <strong className="text-emerald-700 ml-1">{queryStats.rows}</strong>
+                             </span>
+
+                             {queryStats.total_db && (
+                                 <>
+                                     <span className="text-gray-300">|</span>
+                                     <span className="flex items-center">
+                                         Total in DB: <strong className="text-amber-600 ml-1">{queryStats.total_db}</strong>
+                                     </span>
+                                 </>
+                             )}
+                         </div>
+                     )}
+                 </div>
+
                  <div className="bg-white border border-gray-300 rounded overflow-hidden">
                     <ResultsTable results={results} />
                  </div>

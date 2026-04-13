@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Η main  στοχος μας να σηκωσει εναν HTTP server που θα εξυπηρετεί τα αιτήματα προς το backend.
-// Θα χρησιμοποιήσουμε το Gorilla Mux για να διαχειριστούμε τα routes και να κατευθύνουμε τα αιτήματα στους κατάλληλους handlers.
+// Η main  στοχος μας να σηκωσει εναν HTTP server που θα εξυπηρετεί τα αιτήματα μας.
+// Θα χρησιμοποιήσουμε το Gorilla Mux library για να διαχειριστούμε τα routes και να κατευθύνουμε τα αιτήματα στους κατάλληλους handlers.
 func main() {
 	//δρομολογητης για να διαχειριστεί τα αιτήματα
 	router := mux.NewRouter()
@@ -35,7 +35,7 @@ func main() {
 	router.HandleFunc("/predefined", handlers.PredefinedQueryHandler).Methods("POST", "GET", "OPTIONS")
 
 	// Register the dashboard stats handler
-	http.HandleFunc("/stats", handlers.GetDashboardStats)
+	//router.HandleFunc("/stats", handlers.GetDashboardStats).Methods("POST", "GET", "OPTIONS")
 
 	// Start the server
 	log.Println("Server is running on port 8080")
