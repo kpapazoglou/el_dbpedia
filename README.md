@@ -19,11 +19,9 @@ It implements a robust **3-tier architecture** (Frontend, Middleware, Database) 
 - Catches raw errors from the Virtuoso Server (e.g., Syntax Errors) and displays them in a dedicated **Error Console** inside the UI, helping users debug their queries effectively.
 
 ### 4⚡ High-Performance SPARQL Execution (Scatter-Gather Pattern)
-Dynamic Parallelism: Whenever a user executes a SELECT query in the editor, the system fetches the requested data while simultaneously calculating the total dataset size (Total in DB) without adding any latency.
-
-Real-Time Telemetry: The React frontend instantly displays execution time, returned rows, and parallel background stats via a live UI badge.
-
-Technical Highlight: Implements the Scatter-Gather pattern utilizing Golang Goroutines and sync.WaitGroup. A custom query parser dynamically intercepts the SPARQL syntax, extracts prefixes, removes LIMIT/ORDER BY clauses, and executes a secondary parallel COUNT query against the Virtuoso DB. This completely eliminates sequential round-trip delays, cutting user wait time by ~50%.
+-**Dynamic Parallelism**: Whenever a user executes a SELECT query in the editor, the system fetches the requested data while simultaneously calculating the total dataset size (Total in DB) without adding any latency.
+-**Real-Time Telemetry**: The React frontend instantly displays execution time, returned rows, and parallel background stats via a live UI badge.
+-**Technical Highlight**: Implements the Scatter-Gather pattern utilizing Golang Goroutines and sync.WaitGroup. A custom query parser dynamically intercepts the SPARQL syntax, extracts prefixes, removes LIMIT/ORDER BY clauses, and executes a -secondary parallel COUNT query against the Virtuoso DB. This completely eliminates sequential round-trip delays, cutting user wait time by ~50%.
 ---
 
 ## 🏗️ Tech Stack
