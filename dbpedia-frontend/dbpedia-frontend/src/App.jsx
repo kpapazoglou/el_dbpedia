@@ -94,34 +94,34 @@ function App() {
                      
                      {/* ΕΜΦΑΝΙΣΗ ΣΤΑΤΙΣΤΙΚΩΝ   */}
                      {queryStats && (
-                         <div className="flex space-x-3 text-[11px] font-mono text-gray-700 bg-[#f8fafc] px-3 py-1.5 rounded border border-gray-300 shadow-sm items-center">
-                             
-                             {queryStats.isParallel && (
-                                 <span className="flex items-center text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-[9px]">
-                                     <span className="mr-1 animate-pulse">⚡</span> Parallel
-                                 </span>
-                             )}
+                        <div className="flex space-x-3 text-[11px] font-mono text-gray-700 bg-[#f8fafc] px-3 py-1.5 rounded border border-gray-300 shadow-sm items-center">
+                            
+                            {queryStats.isParallel && (
+                                <span className="flex items-center text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-[9px]">
+                                    <span className="mr-1 animate-pulse">⚡</span> Parallel
+                                </span>
+                            )}
 
-                             <span className="flex items-center">
-                                 Time: <strong className="text-indigo-700 ml-1">{queryStats.time} ms</strong>
-                             </span>
-                             
-                             <span className="text-gray-300">|</span>
-                             
-                             <span className="flex items-center">
-                                 Returned Rows: <strong className="text-emerald-700 ml-1">{queryStats.rows}</strong>
-                             </span>
+                            <span>Time: <strong className="text-indigo-700">{queryStats.time} ms</strong></span>
+                            <span className="text-gray-300">|</span>
+                            <span>Rows: <strong className="text-emerald-700">{queryStats.rows}</strong></span>
 
-                             {queryStats.total_db && (
-                                 <>
-                                     <span className="text-gray-300">|</span>
-                                     <span className="flex items-center">
-                                         Total in DB: <strong className="text-amber-600 ml-1">{queryStats.total_db}</strong>
-                                     </span>
-                                 </>
-                             )}
-                         </div>
-                     )}
+                            {queryStats.total_db && (
+                                <>
+                                    <span className="text-gray-300">|</span>
+                                    <span className="flex items-center">
+                                        {queryStats.total_db === "TIMEOUT" ? (
+                                            <span className="text-amber-600 font-bold italic">
+                                                ⚠️ Αδυναμία επιστροφής συνολικού όγκου (Timeout)
+                                            </span>
+                                        ) : (
+                                            <>Total in DB: <strong className="text-amber-600 ml-1">{queryStats.total_db}</strong></>
+                                        )}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
                  </div>
 
                  <div className="bg-white border border-gray-300 rounded overflow-hidden">

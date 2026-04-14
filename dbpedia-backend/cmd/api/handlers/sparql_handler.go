@@ -5,37 +5,30 @@ import (
 	"dbpedia-backend/cmd/api/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-	"time"
-	"fmt"
 	"sync"
+	"time"
 )
 
-// SPARQLHandler handles SPARQL query requests.
 func SPARQLHandler(w http.ResponseWriter, r *http.Request) {
-	// --- 1. ΠΡΟΣΘΗΚΗ: CORS Headers (Απαραίτητο για React) ---
+	// CORS Headers
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	// --- 2. ΠΡΟΣΘΗΚΗ: Διαχείριση OPTIONS (Pre-flight check) ---
-	// Αν είναι OPTIONS, σταματάμε εδώ με OK (δεν πάμε να διαβάσουμε JSON)
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	var sparqlQuery string
-
-	// --- 3. ΠΡΟΣΘΗΚΗ: Υποστήριξη GET (για browser) και POST (για React) ---
 	if r.Method == "GET" {
-		// Αν είναι GET, διαβάζουμε από το URL
 		sparqlQuery = r.URL.Query().Get("query")
 	} else {
-		// Αν είναι POST, διαβάζουμε το JSON
 		var requestBody struct {
 			Query string `json:"query"`
 		}
@@ -46,20 +39,17 @@ func SPARQLHandler(w http.ResponseWriter, r *http.Request) {
 		sparqlQuery = requestBody.Query
 	}
 
-	// Validate the SPARQL query
 	if err := ValidateSPARQLQuery(sparqlQuery); err != nil {
-		log.Printf("Validation error: %v", err)
 		utils.HandleError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Get SPARQL endpoint from environment variable
 	endpoint := os.Getenv("VIRTUOSO_ENDPOINT")
 	if endpoint == "" {
-		endpoint = "http://store:8890/sparql" // Default to Docker network service
+		endpoint = "http://store:8890/sparql"
 	}
 
-	// Execute the SPARQL query
+	// CONCURRENCY & TIMEOUT GUARD
 	startTime := time.Now()
 	var wg sync.WaitGroup
 
@@ -67,60 +57,77 @@ func SPARQLHandler(w http.ResponseWriter, r *http.Request) {
 	var countResult string
 	var dataErr error
 
-	// Ελέγχουμε αν το ερώτημα είναι SELECT για να κάνουμε το παράλληλο COUNT
 	isSelect := strings.Contains(strings.ToUpper(sparqlQuery), "SELECT")
 
-	// Goroutine 1: Φέρνει τα πραγματικά δεδομένα
+	// Goroutine 1: Δεδομένα
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		dataResult, dataErr = services.ExecuteSPARQL(endpoint, sparqlQuery)
 	}()
 
-	// Goroutine 2: Φέρνει ΠΑΡΑΛΛΗΛΑ το συνολικό Count (μόνο αν είναι SELECT)
+	// Goroutine 2: Παράλληλο Count
 	if isSelect {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			// Δημιουργούμε ένα υπο-ερώτημα που μετράει το σύνολο - μετατροπη με το BuildCountQuery
 			countQ := BuildCountQuery(sparqlQuery)
 			countResult, _ = services.ExecuteSPARQL(endpoint, countQ)
 		}()
 	}
 
-	// Η Go περιμένει να τελειώσουν ΚΑΙ ΤΑ ΔΥΟ νήματα!
-	wg.Wait()
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	// Περιμένουμε είτε να τελειώσουν όλα, είτε να περάσουν 5 δευτερόλεπτα
+	select {
+	case <-done:
+		// Όλα ολοκληρώθηκαν κανονικά
+	case <-time.After(5 * time.Second):
+		// Ενεργοποίηση Timeout αν το ερώτημα αργεί πολύ
+		log.Println("[TIMEOUT] Το background count query ακυρώθηκε λόγω καθυστέρησης.")
+		if countResult == "" {
+			countResult = "TIMEOUT_ERROR"
+		}
+	}
+
 	executionTime := time.Since(startTime).Milliseconds()
-	// =================================================================
 
 	if dataErr != nil {
 		utils.HandleError(w, dataErr.Error(), http.StatusInternalServerError)
 		return
 	}
-	
-	// --- 4. ΕΝΣΩΜΑΤΩΣΗ ΣΤΑΤΙΣΤΙΚΩΝ ΣΤΟ ΑΠΟΤΕΛΕΣΜΑ ---
+
+	// Ενσωμάτωση στατιστικών
 	var jsonResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(dataResult), &jsonResponse); err == nil {
-		
+
 		stats := map[string]interface{}{
 			"time_ms":            executionTime,
 			"parallel_execution": isSelect,
 		}
 
-		// Αν το Goroutine 2 έφερε αποτέλεσμα, το διαβάζουμε
-		if isSelect && countResult != "" {
-			var cResp struct {
-				Results struct {
-					Bindings []map[string]struct{ Value string `json:"value"` } `json:"bindings"`
-				} `json:"results"`
-			}
-			if json.Unmarshal([]byte(countResult), &cResp) == nil && len(cResp.Results.Bindings) > 0 {
-				stats["total_db_rows"] = cResp.Results.Bindings[0]["total_count"].Value
+		if isSelect {
+			if countResult == "TIMEOUT_ERROR" {
+				stats["total_db_rows"] = "TIMEOUT"
+			} else if countResult != "" {
+				var cResp struct {
+					Results struct {
+						Bindings []map[string]struct {
+							Value string `json:"value"`
+						} `json:"bindings"`
+					} `json:"results"`
+				}
+				if json.Unmarshal([]byte(countResult), &cResp) == nil && len(cResp.Results.Bindings) > 0 {
+					stats["total_db_rows"] = cResp.Results.Bindings[0]["total_count"].Value
+				}
 			}
 		}
 
 		jsonResponse["concurrency_stats"] = stats
-		
 		finalBytes, _ := json.Marshal(jsonResponse)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -128,7 +135,6 @@ func SPARQLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return the results as JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(dataResult))
